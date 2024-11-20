@@ -13,8 +13,18 @@ import (
 	"github.com/mmatczuk/go-http-tunnel/log"
 )
 
+var BufferSize uint
+
+func ioCopy(dst io.Writer, src io.Reader) (int64, error) {
+	if BufferSize == 0 {
+		return io.Copy(dst, src)
+	}
+	b := make([]byte, BufferSize)
+	return io.CopyBuffer(dst, src, b)
+}
+
 func transfer(dst io.Writer, src io.Reader, logger log.Logger) {
-	n, err := io.Copy(dst, src)
+	n, err := ioCopy(dst, src)
 	if err != nil {
 		if !strings.Contains(err.Error(), "context canceled") && !strings.Contains(err.Error(), "CANCEL") {
 			logger.Log(
